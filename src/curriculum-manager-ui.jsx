@@ -3,6 +3,7 @@ import { ChevronDown, ChevronLeft, Plus, Edit3, Eye, EyeOff, Archive, Tag, BookO
 import { useLessonTree, useCompetencies, useLessonMutations } from "./use-lessons";
 import { rules, composeRules, validate } from "./validation";
 import { Skeleton, ErrorBlock, EmptyState, LiveStatusAnnouncer } from "./ui-primitives";
+import PendingCorrectionsWidget from "./PendingCorrectionsWidget"; // تم إضافة الاستيراد هنا
 
 /**
  * Curriculum & Lesson Manager — Owner Dashboard
@@ -179,7 +180,7 @@ export default function CurriculumManager({ session }) {
 
   const [expandedSubjects, setExpandedSubjects] = useState(new Set());
   const [query, setQuery] = useState("");
-  const [editingLesson, setEditingLesson] = useState(null); // { weekId, subjectId, lesson } or lesson: null for new
+  const [editingLesson, setEditingLesson] = useState(null);
   const [statusFilter, setStatusFilter] = useState("all");
 
   function toggleSubject(id) {
@@ -236,6 +237,13 @@ export default function CurriculumManager({ session }) {
       <LiveStatusAnnouncer isLoading={isLoading} error={error} successMessage="تم تحميل المنهج" />
 
       <div className="max-w-4xl mx-auto px-6 py-6">
+        
+        {/* --- تمت إضافة بطاقة الواجبات المنتظرة هنا --- */}
+        <div className="mb-6">
+          <PendingCorrectionsWidget />
+        </div>
+        {/* ------------------------------------------- */}
+
         <div className="flex items-center gap-3 mb-5">
           <div className="relative flex-1">
             <Search size={16} className="absolute right-3 top-1/2 -translate-y-1/2 text-stone-400" />
