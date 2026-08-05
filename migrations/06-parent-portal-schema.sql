@@ -16,7 +16,7 @@ create table parent_student_links (
   id            uuid primary key default gen_random_uuid(),
   parent_id     uuid not null references users(id),
   student_id    uuid not null references users(id),
-  relationship  text,                          -- 'أب' | 'أم' | 'ولي أمر آخر'
+  relationship  text,                              -- 'أب' | 'أم' | 'ولي أمر آخر'
   verified      boolean not null default false, -- Owner must explicitly verify before this grants any read access
   created_at    timestamptz not null default now(),
   unique (parent_id, student_id)
@@ -89,15 +89,6 @@ create policy parent_reads_linked_exam_attempts on exam_attempts
 
 create policy parent_reads_linked_competency_scores on competency_scores
   for select using (is_verified_parent_of(student_id));
-
-create policy parent_reads_linked_readiness on readiness_snapshots
-  for select using (is_verified_parent_of(student_id));
-
--- Same is_visible_to_student condition as the student's own policy — a
--- parent never sees a revision plan the Owner hasn't released to the
--- student either; the parent gate is additive, not a way around it.
-create policy parent_reads_linked_visible_revision_plan on revision_plans
-  for select using (is_verified_parent_of(student_id) and is_visible_to_student = true);
 
 create policy parent_reads_linked_activity_log on student_activity_log
   for select using (is_verified_parent_of(student_id));
