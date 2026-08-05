@@ -5,7 +5,11 @@
 -- ============================================================================
 
 -- 1. Restore the full student_list_view (with readiness subquery)
-create or replace view student_list_view as
+-- Since PostgreSQL prevents changing column types in views (numeric to numeric(5,2)),
+-- we must drop it first.
+drop view if exists student_list_view cascade;
+
+create view student_list_view as
 select
   sp.user_id, sp.full_name, sp.status, sp.enrollment_date, sp.avatar_url,
   (select round(avg((a.total_score / nullif(a.max_score,0)) * 100), 1)
@@ -14,7 +18,11 @@ select
   (select rs.score from readiness_snapshots rs where rs.student_id = sp.user_id order by rs.computed_at desc limit 1) as latest_readiness_score
 from student_profiles sp;
 
+-- Re-apply security setting since dropping the view removed it
+alter view student_list_view set (security_invoker = true);
+
 -- 2. Restore student_latest_readiness_view
+drop view if exists student_latest_readiness_view cascade;
 create view student_latest_readiness_view as
 select distinct on (student_id)
   student_id, score, breakdown, computed_at
