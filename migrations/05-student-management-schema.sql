@@ -63,7 +63,7 @@ select
   (select round(avg((a.total_score / nullif(a.max_score,0)) * 100), 1)
      from exam_attempts a where a.student_id = sp.user_id and a.status = 'graded') as exam_average,
   (select count(*) from homework_submissions hs where hs.student_id = sp.user_id and hs.status = 'submitted') as pending_grading_count,
-  (select rs.score from readiness_snapshots rs where rs.student_id = sp.user_id order by rs.computed_at desc limit 1) as latest_readiness_score
+  null::numeric as latest_readiness_score
 from student_profiles sp;
 
 create view student_academic_progress_view as
@@ -106,12 +106,6 @@ select
   case when a.status = 'graded' then ans.points_awarded else null end as points_awarded
 from exam_answers ans
 join exam_attempts a on a.id = ans.attempt_id;
-
-create view student_latest_readiness_view as
-select distinct on (student_id)
-  student_id, score, breakdown, computed_at
-from readiness_snapshots
-order by student_id, computed_at desc;
 
 -- Only surfaces plans the Owner has explicitly made visible — mirrors the
 -- exact filter student-dashboard-service.js already applies at the read layer,
@@ -186,7 +180,6 @@ alter view student_academic_progress_view set (security_invoker = true);
 -- dropped and recreated as a DEFINER view in exam-security-hardening.sql;
 -- setting security_invoker here would just be discarded by that DROP, but
 -- leaving the line implies this is still the active configuration.
-alter view student_latest_readiness_view set (security_invoker = true);
 alter view student_visible_revision_plan_view set (security_invoker = true);
 
 -- With security_invoker on, student_academic_progress_view / student_exam_
@@ -264,12 +257,6 @@ alter table competency_scores enable row level security;
 create policy owner_full_access_competency_scores on competency_scores
   for all using (current_user_role() = 'owner') with check (current_user_role() = 'owner');
 create policy student_reads_own_competency_scores on competency_scores
-  for select using (auth.uid() = student_id);
-
-alter table readiness_snapshots enable row level security;
-create policy owner_full_access_readiness_snapshots on readiness_snapshots
-  for all using (current_user_role() = 'owner') with check (current_user_role() = 'owner');
-create policy student_reads_own_readiness on readiness_snapshots
   for select using (auth.uid() = student_id);
 
 alter table revision_plans enable row level security;
