@@ -54,14 +54,6 @@ export function composeRules(...ruleFns) {
 /**
  * Validates a values object against a schema of { field: validatorFn }.
  * Returns { isValid, errors } where errors is { field: message }.
- *
- * Example:
- *   const schema = {
- *     title: rules.required(),
- *     content_body: composeRules(rules.required(), rules.minLength(20)),
- *     competencyIds: rules.minItems(1, "اختر كفاءة واحدة على الأقل"),
- *   };
- *   const { isValid, errors } = validate(schema, formValues);
  */
 export function validate(schema, values) {
   const errors = {};
@@ -70,4 +62,39 @@ export function validate(schema, values) {
     if (error) errors[field] = error;
   }
   return { isValid: Object.keys(errors).length === 0, errors };
+}
+
+// ============================================================================
+// 🚀 LESSON LIFECYCLE SCHEMA (دورة حياة الدرس)
+// تمت الإضافة لضمان التحكم الصارم في حالات الدرس وانتقالاتها
+// ============================================================================
+
+export const LESSON_STATUSES = ["draft", "scheduled", "published", "closed", "archived"];
+
+export const lessonLifecycleSchema = {
+  title: rules.required("عنوان الدرس مطلوب"),
+  content_body: composeRules(
+    rules.required("محتوى الدرس مطلوب"),
+    rules.minLength(20, "المحتوى قصير جدًا — أضف تفاصيل أكثر")
+  ),
+  competencyIds: rules.minItems(1, "اختر كفاءة واحدة على الأقل"),
+  status: rules.oneOf(LESSON_STATUSES, "حالة الدرس غير صالحة أو غير معترف بها في النظام"),
+};
+
+/**
+ * دالة ذكية للتحقق من منطق الانتقال بين حالات الدرس
+ * تمنع الأخطاء المنطقية (مثل إغلاق درس لم يُنشر بعد، أو تعديل درس مؤرشف)
+ */
+export function validateLessonTransition(currentStatus, newStatus) {
+  if (currentStatus === newStatus) return null; // لا يوجد تغيير، مسموح
+
+  if (currentStatus === "archived") {
+    return "لا يمكن تغيير حالة درس مؤرشف. يجب إعادته كمسودة أولاً إذا لزم الأمر.";
+  }
+
+  if (currentStatus === "draft" && newStatus === "closed") {
+    return "عملية غير منطقية: لا يمكن إغلاق واجب وهو لا يزال مسودة ولم يُنشر للتلاميذ بعد.";
+  }
+
+  return null; // الانتقال مسموح وصالح
 }
