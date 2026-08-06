@@ -1,18 +1,21 @@
 import React from 'react'
-import ReactDOM from 'react-dom/client'
+import ReactDOM from 'react-client/client' // أو react-dom/client حسب النسخة
+import ReactDOMClient from 'react-dom/client'
 
-// مكون بسيط مؤقت لحين ربط الصفحة الرئيسية
-function App() {
+// استيراد المكونات التي أنشأتها مسبقاً في مجلد src
+// يمكنك تجربة استعراض إحدى الصفحات الرئيسية مباشرة هنا
+import TeacherDashboard from './teacher-today-page.jsx'
+
+function AppRouter() {
   return (
-    <div style={{ padding: '40px', fontFamily: 'Tahoma, sans-serif', textAlign: 'center' }}>
-      <h1>🎓 منصة اقرأ أكثر التعليمية</h1>
-      <p>تم إطلاق النظام والواجهة بنجاح تام!</p>
+    <div style={{ direction: 'rtl', fontFamily: 'Tahoma, sans-serif', minHeight: '100vh', backgroundColor: '#f8fafc' }}>
+      <TeacherDashboard />
     </div>
   )
 }
 
-ReactDOM.createRoot(document.getElementById('root')).render(
+ReactDOMClient.createRoot(document.getElementById('root')).render(
   <React.StrictMode>
-    <App />
-  </React.StrictMode>,
+    <AppRouter />
+  </React.StrictMode>
 )
